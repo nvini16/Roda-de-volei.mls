@@ -1,0 +1,59 @@
+name: Validate static site
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f index.html
+          test -f style.css
+          test -f script.js
+          test -f README.md
+
+      - name: Check HTML references
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import re
+          from pathlib import Path
+
+          html = Path('index.html').read_text(encoding='utf-8')
+          refs = re.findall(r'(?:src|href)=["\']([^"\']+)["\']', html)
+          external = ('http://', 'https://', '#', 'mailto:', 'tel:', 'data:')
+          missing = []
+          for ref in refs:
+              if ref.startswith(external):
+                  continue
+              path = Path(ref.split('#', 1)[0].split('?', 1)[0])
+              if path and not path.exists():
+                  missing.append(ref)
+          if missing:
+              raise SystemExit('Missing local references: ' + ', '.join(missing))
+          print('All local HTML references exist.')
+          PY
+
+      - name: Check JavaScript syntax
+        shell: bash
+        run: node --check script.js
+
+      - name: Check for merge-conflict markers
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE '^(<<<<<<<|=======|>>>>>>>)' --exclude-dir=.git .; then
+            echo 'Merge conflict marker detected.'
+            exit 1
+          fi
