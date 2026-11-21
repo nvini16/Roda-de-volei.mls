@@ -21,7 +21,6 @@ function parseEnvFile(filePath) {
     const key = line.slice(0, eqIndex).trim();
     let value = line.slice(eqIndex + 1).trim();
 
-    // Remove aspas simples ou duplas externas, se existirem
     if (
       (value.startsWith('"') && value.endsWith('"')) ||
       (value.startsWith("'") && value.endsWith("'"))
@@ -37,7 +36,6 @@ function parseEnvFile(filePath) {
 
 const envFromFile = parseEnvFile(envPath);
 
-// Prioriza variáveis já injetadas no ambiente (ex.: CI/CD) e faz fallback para o .env local
 const supabaseUrl = (process.env.SUPABASE_URL || envFromFile.SUPABASE_URL || "").trim();
 const supabasePublishableKey = (
   process.env.SUPABASE_PUBLISHABLE_KEY ||

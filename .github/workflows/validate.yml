@@ -23,11 +23,29 @@ jobs:
         run: |
           set -euo pipefail
           test -f index.html
+          test -f login.html
+          test -f perfil.html
           test -f style.css
           test -f script.js
+          test -f supabase-auth.js
           test -f README.md
           test -f .env.example
           test -f supabase-config.example.js
+          test -f scripts/generate-supabase-config.mjs
+
+      - name: Generate supabase-config.js when env vars are provided
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+          RODA_TIME_ZONE: ${{ vars.RODA_TIME_ZONE }}
+        run: |
+          set -euo pipefail
+          if [ -n "${SUPABASE_URL:-}" ] && [ -n "${SUPABASE_PUBLISHABLE_KEY:-}" ]; then
+            node scripts/generate-supabase-config.mjs
+          else
+            echo "SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY não definidos no workflow; pulando geração automática."
+          fi
 
       - name: Check HTML and CSS references
         shell: bash
@@ -37,7 +55,8 @@ jobs:
           import re
           from pathlib import Path
 
-          html = Path('index.html').read_text(encoding='utf-8')
+          html_files = ['index.html', 'login.html', 'perfil.html']
+          html = '\n'.join(Path(f).read_text(encoding='utf-8') for f in html_files)
           css = Path('style.css').read_text(encoding='utf-8')
           refs = re.findall(r'(?:src|href)=["\']([^"\']+)["\']', html)
           refs += re.findall(r'url\(["\']?([^"\')]+)["\']?\)', css)
@@ -61,6 +80,7 @@ jobs:
           node --check script.js
           node --check supabase-config.example.js
           node --check supabase-auth.js
+          node --check scripts/generate-supabase-config.mjs
           if [ -f supabase-config.js ]; then
             node --check supabase-config.js
           fi
