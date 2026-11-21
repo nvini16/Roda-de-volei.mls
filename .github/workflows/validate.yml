@@ -13,6 +13,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Validate required files
         shell: bash
         run: |
@@ -21,12 +26,14 @@ jobs:
           test -f style.css
           test -f script.js
           test -f README.md
+          test -f .env.example
+          test -f supabase-config.example.js
 
       - name: Check HTML and CSS references
         shell: bash
         run: |
           set -euo pipefail
-          python - <<'PY'
+          python3 - <<'PY'
           import re
           from pathlib import Path
 
@@ -49,7 +56,14 @@ jobs:
 
       - name: Check JavaScript syntax
         shell: bash
-        run: node --check script.js
+        run: |
+          set -euo pipefail
+          node --check script.js
+          node --check supabase-config.example.js
+          node --check supabase-auth.js
+          if [ -f supabase-config.js ]; then
+            node --check supabase-config.js
+          fi
 
       - name: Check for merge-conflict markers
         shell: bash

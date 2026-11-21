@@ -1,0 +1,8 @@
+# Variáveis de ambiente locais
+.env
+.env.*
+!.env.example
+
+# Configuração local do Supabase (se usar valores reais nela)
+supabase-config.js
+!supabase-config.example.js
