@@ -22,7 +22,7 @@ jobs:
           test -f script.js
           test -f README.md
 
-      - name: Check HTML references
+      - name: Check HTML and CSS references
         shell: bash
         run: |
           set -euo pipefail
@@ -31,7 +31,9 @@ jobs:
           from pathlib import Path
 
           html = Path('index.html').read_text(encoding='utf-8')
+          css = Path('style.css').read_text(encoding='utf-8')
           refs = re.findall(r'(?:src|href)=["\']([^"\']+)["\']', html)
+          refs += re.findall(r'url\(["\']?([^"\')]+)["\']?\)', css)
           external = ('http://', 'https://', '#', 'mailto:', 'tel:', 'data:')
           missing = []
           for ref in refs:
@@ -42,7 +44,7 @@ jobs:
                   missing.append(ref)
           if missing:
               raise SystemExit('Missing local references: ' + ', '.join(missing))
-          print('All local HTML references exist.')
+          print('All local HTML and CSS references exist.')
           PY
 
       - name: Check JavaScript syntax
