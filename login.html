@@ -7,21 +7,16 @@
   <meta name="theme-color" content="#0f0f0f">
   <title>Entrar – Roda de Vôlei</title>
   <link rel="icon" type="image/webp" href="assets/images/logo.webp">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="login.css">
   <script type="module" src="supabase-auth.js"></script>
 </head>
-<body>
-  <header class="site-header">
-    <img class="logo-border" src="assets/images/logo.webp" alt="Logo da Roda de Vôlei da E.E. Marlene Leite da Silva" width="120" height="120">
-    <h1>Roda de Vôlei</h1>
-    <p>E.E. Marlene Leite da Silva</p>
-  </header>
-
-  <main>
-    <section class="section account-section" id="loginSection" aria-labelledby="login-title">
-      <div class="section-heading">
-        <h2 id="login-title">Entrar na comunidade</h2>
-        <a class="button btn-secondary" href="index.html">Voltar para a Home</a>
+<body class="login-page">
+  <main class="login-container">
+    <section class="section account-section login-card" id="loginSection" aria-labelledby="login-title">
+      <div class="login-brand">
+        <img class="logo-border" src="assets/images/logo.webp" alt="Logo da Roda de Vôlei da E.E. Marlene Leite da Silva" width="84" height="84">
+        <h1 id="login-title">Roda de Vôlei</h1>
+        <p class="login-subtitle">E.E. Marlene Leite da Silva</p>
       </div>
 
       <div class="auth-box" id="authBox">
@@ -33,7 +28,7 @@
             <input type="email" id="authEmail" name="email" autocomplete="email" required placeholder="seu@email.com">
           </label>
 
-          <label> 
+          <label>
             Senha
             <input type="password" id="authPassword" name="password" autocomplete="current-password" required minlength="6" placeholder="••••••••">
           </label>
@@ -45,6 +40,10 @@
         </form>
 
         <p class="auth-feedback" id="authFeedback" role="status" aria-live="polite"></p>
+      </div>
+
+      <div class="login-footer-link">
+        <a class="button btn-secondary" href="index.html">Voltar para a Home</a>
       </div>
     </section>
   </main>

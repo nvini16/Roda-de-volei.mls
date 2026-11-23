@@ -41,8 +41,8 @@ const els = {
   profileDisplayName: document.getElementById("profileDisplayName"),
   profileNickname: document.getElementById("profileNickname"),
   attendanceSummary: document.getElementById("attendanceSummary"),
-  btnConfirmPresence: document.getElementById("btnConfirmPresence"),
-  btnCancelPresence: document.getElementById("btnCancelPresence")
+  btnConfirmPresence: document.getElementById("btnConfirmAttendance"),
+  btnCancelPresence: document.getElementById("btnCancelAttendance")
 };
 
 const isLoginPage = Boolean(els.authForm);
@@ -61,8 +61,14 @@ function getSaoPauloTodayISO() {
   return formatter.format(new Date());
 }
 
-function setFeedback(el, msg) {
-  if (el) el.textContent = msg || "";
+function setFeedback(el, msg, state = "info") {
+  if (!el) return;
+  el.textContent = msg || "";
+  if (msg) {
+    el.dataset.state = state;
+  } else {
+    delete el.dataset.state;
+  }
 }
 
 function setButtonsDisabled(disabled) {
@@ -249,22 +255,30 @@ async function setAttendanceStatus(desiredStatus) {
 }
 
 async function syncAuthState(session) {
-  setFeedback(els.authFeedback, "");
-  setFeedback(els.memberFeedback, "");
-
   if (!session?.user) {
+    setFeedback(els.authFeedback, "");
+    setFeedback(els.memberFeedback, "");
     cleanupRealtime();
     showLoggedOutUI();
     return;
   }
 
-if (isLoginPage && !hasRedirectedAfterAuth) {
-  hasRedirectedAfterAuth = true;
-  setFeedback(els.authFeedback, "Sessão ativa! Redirecionando para a Home...");
-  window.location.replace("index.html");
-  return;
-}
+  if (isLoginPage && !hasRedirectedAfterAuth) {
+    hasRedirectedAfterAuth = true;
+    setButtonsDisabled(true);
+    setFeedback(
+      els.authFeedback,
+      "Autenticado com sucesso! Redirecionando para a Home...",
+      "success"
+    );
+    setTimeout(() => {
+      window.location.replace("index.html");
+    }, 700);
+    return;
+  }
 
+  setFeedback(els.authFeedback, "");
+  setFeedback(els.memberFeedback, "");
   showLoggedInUI();
 
   const tasks = [ensureAndLoadProfile(session.user)];
@@ -298,19 +312,79 @@ els.authForm?.addEventListener("submit", async (event) => {
   const validationError = validateCredentials(email, password);
 
   if (validationError) {
-    setFeedback(els.authFeedback, validationError);
+    setFeedback(els.authFeedback, validationError, "error");
     return;
   }
 
-  setFeedback(els.authFeedback, "Entrando...");
+  setFeedback(els.authFeedback, "Verificando credenciais...", "info");
   setButtonsDisabled(true);
 
   try {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      setFeedback(els.authFeedback, `Erro no login: ${error.message}`);
+      setFeedback(els.authFeedback, `Erro no login: ${error.message}`, "error");
+      setButtonsDisabled(false);
+      return;
     }
-  } finally {
+
+    setFeedback(
+      els.authFeedback,
+      "Login realizado! Redirecionando para a Home...",
+      "success"
+    );
+  } catch (err) {
+    setFeedback(
+      els.authFeedback,
+      `Falha inesperada ao entrar: ${err?.message || "tente novamente."}`,
+      "error"
+    );
+    setButtonsDisabled(false);
+  }
+});
+
+els.btnSignup?.addEventListener("click", async () => {
+  setFeedback(els.authFeedback, "");
+
+  const email = els.authEmail?.value.trim() || "";
+  const password = els.authPassword?.value || "";
+  const validationError = validateCredentials(email, password);
+
+  if (validationError) {
+    setFeedback(els.authFeedback, validationError, "error");
+    return;
+  }
+
+  setFeedback(els.authFeedback, "Criando sua conta...", "info");
+  setButtonsDisabled(true);
+
+  try {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      setFeedback(els.authFeedback, `Erro no cadastro: ${error.message}`, "error");
+      setButtonsDisabled(false);
+      return;
+    }
+
+    if (data.session) {
+      setFeedback(
+        els.authFeedback,
+        "Conta criada! Redirecionando para a Home...",
+        "success"
+      );
+    } else {
+      setFeedback(
+        els.authFeedback,
+        "Conta criada! Confira seu e-mail para confirmar o cadastro antes de entrar.",
+        "success"
+      );
+      setButtonsDisabled(false);
+    }
+  } catch (err) {
+    setFeedback(
+      els.authFeedback,
+      `Falha inesperada ao cadastrar: ${err?.message || "tente novamente."}`,
+      "error"
+    );
     setButtonsDisabled(false);
   }
 });

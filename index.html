@@ -24,41 +24,38 @@
 
   <main>
 
-    <section class="section account-section" id="comunidade" aria-labelledby="comunidade-title">
-      <h2 id="comunidade-title">Comunidade &amp; Presença</h2>
+    <section class="section" id="comunidade-presenca" aria-labelledby="comunidade-title">
+  <div class="section-heading">
+    <h2 id="comunidade-title">Comunidade &amp; Presença</h2>
+  </div>
 
-      <!-- Visível apenas quando NÃO está autenticado -->
-      <div class="auth-box" id="authBox">
-        <p id="authHint">Entre com sua conta para acessar seu perfil e confirmar presença na roda de hoje.</p>
-        <div class="auth-actions">
-          <a class="button" id="btnGoLogin" href="login.html">Entrar</a>
-        </div>
+  <div class="auth-box" id="authBox" hidden>
+    <p id="authHint">Entre para acompanhar e confirmar sua presença na roda de hoje.</p>
+    <div class="auth-actions">
+      <a class="button" href="login.html">Entrar</a>
+    </div>
+  </div>
+
+  <div class="profile-panel" id="profilePanel" hidden>
+    <div class="presence-bar">
+      <span class="presence-badge" id="attendanceSummary" role="status" aria-live="polite">
+        Verificando presença...
+      </span>
+
+      <div class="presence-actions">
+        <button type="button" id="btnConfirmAttendance">Confirmar presença</button>
+        <button type="button" id="btnCancelAttendance" class="btn-secondary">Cancelar presença</button>
+        <a class="button" href="perfil.html">Meu perfil</a>
       </div>
+    </div>
 
-      <!-- Visível APENAS quando está autenticado -->
-      <div class="profile-panel" id="profilePanel" hidden>
-        <div class="profile-header">
-          <div>
-            <p class="profile-greeting">Olá, <strong id="profileNameDisplay">Participante</strong></p>
-            <p class="profile-meta" id="profileRoleDisplay"></p>
-          </div>
-          <div class="profile-actions">
-            <a class="button" href="perfil.html">Meu perfil</a>
-          </div>
-        </div>
+    <p class="auth-feedback" id="memberFeedback" role="status" aria-live="polite"></p>
 
-        <div class="attendance-box">
-          <h3>Presença na roda de hoje</h3>
-          <p id="attendanceSummary">Carregando status da presença...</p>
-          <div class="attendance-actions">
-            <button type="button" id="btnConfirmPresence">Confirmar presença</button>
-            <button type="button" id="btnCancelPresence" class="btn-secondary">Cancelar presença</button>
-          </div>
-        </div>
-
-        <p class="auth-feedback" id="memberFeedback" role="status" aria-live="polite"></p>
-      </div>
-    </section>
+    <!-- Âncoras ocultas para compatibilidade com o supabase-auth.js -->
+    <span id="profileGreeting" hidden></span>
+    <span id="profileRole" hidden></span>
+  </div>
+</section>
 
     <section class="section" aria-labelledby="sobre-title">
       <h2 id="sobre-title">Sobre</h2>
