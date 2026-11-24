@@ -51,8 +51,7 @@ body.lightbox-open {
   line-height: 1.2;
 }
 
-.section,
-.games-section {
+.section {
   width: min(100%, 900px);
   margin-inline: auto;
   padding: 30px 20px;
@@ -88,6 +87,8 @@ h2 {
   justify-content: space-between;
   gap: 1rem;
 }
+
+/* GALERIA  */
 
 .scroll-indicator {
   font-size: 0.9rem;
@@ -287,7 +288,8 @@ a:focus-visible {
 }
 
 .cta h2 {
-  display: inline-block;
+  display: flex;
+  margin-left: 0;
   border-left-color: var(--orange-light);
 }
 
@@ -308,6 +310,95 @@ a:focus-visible {
 .cta button:hover,
 .cta .button:hover {
   background: #ffb86b;
+}
+
+/* Seção Jogos Passatempo */
+.games-section {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto 40px;
+  padding: 0 20px;
+}
+
+.games-section .box {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Título com a barra lateral laranja padrão das seções */
+.games-section .section-title {
+  font-size: 1.5rem;
+  color: #fff;
+  border-left: 4px solid var(--orange-light, #ffb347);
+  padding-left: 12px;
+  margin: 0;
+}
+
+/* Card do jogo */
+.games-section .card {
+  background: var(--surface, #1a1a1a);
+  border: 1px solid #333;
+  border-radius: 14px;
+  padding: 20px;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.games-section .card:hover {
+  transform: translateY(-4px);
+  border-color: var(--orange-light, #ffb347);
+}
+
+/* Imagem do card */
+.games-section .card img {
+  width: 100%;
+  max-width: 210px;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+}
+
+/* Título do card */
+.games-section .card h3 {
+  font-size: 1.1rem;
+  color: #fff;
+  margin: 0;
+  line-height: 1.35;
+}
+
+/* Botão "Visitar" estilizado */
+.games-section .card a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  background: var(--orange-light, #ffb347);
+  color: #111;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: 24px;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.games-section .card a:hover {
+  background: #ffc26b;
+}
+
+/* Responsividade para telas muito pequenas */
+@media (max-width: 480px) {
+  .games-section .card {
+    max-width: 100%;
+  }
 }
 
 footer {
@@ -355,12 +446,13 @@ footer {
   display: inline-flex;
   align-items: center;
   padding: 7px 14px;
-  border-radius: 999px;
+  border-radius: 0 99px 99px 0;
   font-size: 0.92rem;
   font-weight: 700;
-  background: rgba(255, 179, 71, 0.14);
   color: var(--orange-light);
-  border: 1px solid rgba(255, 179, 71, 0.35);
+  border-left: 4px solid var(--orange-light, #ffb347);
+  padding-left: 12px;
+  margin: 0;
 }
 
 .presence-actions {
@@ -424,18 +516,6 @@ footer {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-}
-
-.presence-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 7px 14px;
-  border-radius: 999px;
-  font-size: 0.92rem;
-  font-weight: 700;
-  background: rgba(255, 179, 71, 0.14);
-  color: var(--orange-light);
-  border: 1px solid rgba(255, 179, 71, 0.35);
 }
 
 .presence-actions {
