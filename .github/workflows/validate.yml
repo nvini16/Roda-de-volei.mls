@@ -28,8 +28,10 @@ jobs:
           test -f styles/style.css
           test -f styles/login.css
           test -f styles/perfil.css
+          test -f styles/chat-widget.css
           test -f script.js
           test -f supabase-auth.js
+          test -f chat-widget.js
           test -f README.md
           test -f .env.example
           test -f supabase-config.example.js
@@ -58,7 +60,12 @@ jobs:
           from pathlib import Path
 
           html_files = ['index.html', 'login.html', 'perfil.html']
-          css_files = ['styles/style.css', 'styles/login.css', 'styles/perfil.css']
+          css_files = [
+              'styles/style.css',
+              'styles/login.css',
+              'styles/perfil.css',
+              'styles/chat-widget.css',
+          ]
           html = '\n'.join(Path(f).read_text(encoding='utf-8') for f in html_files)
           css = '\n'.join(Path(f).read_text(encoding='utf-8') for f in css_files)
           refs = re.findall(r'(?:src|href)=["\']([^"\']+)["\']', html)
@@ -83,6 +90,7 @@ jobs:
           node --check script.js
           node --check supabase-config.example.js
           node --check supabase-auth.js
+          node --check chat-widget.js
           node --check scripts/generate-supabase-config.mjs
           if [ -f supabase-config.js ]; then
             node --check supabase-config.js
