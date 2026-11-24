@@ -25,7 +25,9 @@ jobs:
           test -f index.html
           test -f login.html
           test -f perfil.html
-          test -f style.css
+          test -f styles/style.css
+          test -f styles/login.css
+          test -f styles/perfil.css
           test -f script.js
           test -f supabase-auth.js
           test -f README.md
@@ -56,8 +58,9 @@ jobs:
           from pathlib import Path
 
           html_files = ['index.html', 'login.html', 'perfil.html']
+          css_files = ['styles/style.css', 'styles/login.css', 'styles/perfil.css']
           html = '\n'.join(Path(f).read_text(encoding='utf-8') for f in html_files)
-          css = Path('style.css').read_text(encoding='utf-8')
+          css = '\n'.join(Path(f).read_text(encoding='utf-8') for f in css_files)
           refs = re.findall(r'(?:src|href)=["\']([^"\']+)["\']', html)
           refs += re.findall(r'url\(["\']?([^"\')]+)["\']?\)', css)
           external = ('http://', 'https://', '#', 'mailto:', 'tel:', 'data:')
