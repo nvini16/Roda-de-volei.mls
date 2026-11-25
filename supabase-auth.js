@@ -24,6 +24,8 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   }
 });
 
+window.__rodaSupabaseClient = supabase;
+
 const els = {
   authBox: document.getElementById("authBox"),
   profilePanel: document.getElementById("profilePanel"),
