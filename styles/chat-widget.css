@@ -1,18 +1,24 @@
+:root {
+  --mls-chat-borda-perfil: #ffb347;
+  --mls-chat-p: #cececed7;
+  --orange-light: #ffb347;
+}
+
 .mls-chat-launcher {
   position: fixed;
   right: 20px;
   bottom: 20px;
   z-index: 999;
+  width: 56px;
+  height: 56px;
+  padding: 0;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background: var(--orange-light, #ffb347);
-  color: #111;
-  border: none;
-  border-radius: 999px;
-  padding: 12px 18px;
-  font-weight: 700;
-  font-size: 0.95rem;
+  justify-content: center;
+  background: var(--orange-light);
+  border: 3px solid var(--mls-chat-borda-perfil);
+  border-radius: 50%;
+  overflow: hidden;
   cursor: pointer;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   transition: transform 0.2s ease, background-color 0.2s ease;
@@ -21,6 +27,13 @@
 .mls-chat-launcher:hover {
   background: #ffc26b;
   transform: translateY(-2px);
+}
+
+.mls-chat-launcher-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .mls-chat-panel {
@@ -48,24 +61,116 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding: 14px 16px;
   background: #141414;
   border-bottom: 1px solid #2c2c2c;
 }
 
-.mls-chat-header strong {
-  font-size: 0.98rem;
+.mls-chat-perfil-content {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  min-width: 0;
+}
+
+.mls-chat-avatar-wrap {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+}
+
+.mls-chat-perfil-content img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  border: 2px solid var(--mls-chat-borda-perfil, var(--orange-light, #ffb347));
+}
+
+.mls-chat-status-dot {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2px solid #141414;
+}
+
+.mls-chat-perfil {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mls-chat-perfil strong {
+  font-size: 0.95rem;
+  line-height: 1.2;
   color: var(--orange-light, #ffb347);
+  font-weight: 700;
+}
+
+.mls-chat-perfil p {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.25;
+  color: var(--mls-chat-p, #b3b3b3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mls-chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.mls-chat-clear {
+  background: transparent;
+  border: 1px solid rgba(255, 77, 77, 0.35);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #ff5c5c;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.mls-chat-clear:hover {
+  background: rgba(255, 77, 77, 0.12);
+  border-color: rgba(255, 77, 77, 0.7);
+  color: #ff8585;
 }
 
 .mls-chat-close {
   background: transparent;
   border: none;
-  color: #bbb;
-  font-size: 1.2rem;
-  cursor: pointer;
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--orange-light, #ffb347);
+  font-size: 1.35rem;
   line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
+
+.mls-chat-close:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
 
 .mls-chat-messages {
   flex: 1;
@@ -100,9 +205,9 @@
 
 .mls-chat-quick {
   display: flex;
-  flex-wrap: wrap;
+  /* flex-wrap: wrap; */
   gap: 6px;
-  padding: 0 14px 10px;
+  padding: 10px 14px 10px;
 }
 
 .mls-chat-quick button {

@@ -81,7 +81,8 @@ function initChatWidget() {
   launcher.type = "button";
   launcher.className = "mls-chat-launcher";
   launcher.setAttribute("aria-expanded", "false");
-  launcher.textContent = "Assistente da Roda";
+  launcher.setAttribute("aria-label", "Abrir assistente MLS IA");
+  launcher.innerHTML = `<img src="./assets/images/logo.webp" alt="MLS IA" class="mls-chat-launcher-logo" />`;
 
   const panel = document.createElement("section");
   panel.id = "mls-chat-panel";
@@ -91,12 +92,21 @@ function initChatWidget() {
 
   panel.innerHTML = `
     <div class="mls-chat-header">
-      <strong>Assistente • Roda de Vôlei</strong>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <button type="button" class="mls-chat-clear" title="Limpar histórico" style="background:transparent;border:1px solid currentColor;border-radius:6px;padding:2px 8px;font-size:12px;color:inherit;cursor:pointer;" hidden>Limpar</button>
-        <button type="button" class="mls-chat-close" aria-label="Fechar chat">&times;</button>
-      </div>
+  <div class="mls-chat-perfil-content">
+    <div class="mls-chat-avatar-wrap">
+      <img src="./assets/images/logo.webp" alt="Logo da MLS IA" />
+      <span class="mls-chat-status-dot" aria-hidden="true"></span>
     </div>
+    <div class="mls-chat-perfil">
+      <strong>MLS IA</strong>
+      <p class="mls-chat-legend">Assistente • Roda de Vôlei</p>
+    </div>
+  </div>
+  <div class="mls-chat-header-actions">
+    <button type="button" class="mls-chat-clear" title="Limpar histórico" hidden>Limpar</button>
+    <button type="button" class="mls-chat-close" aria-label="Fechar chat">&times;</button>
+  </div>
+</div>
     <div class="mls-chat-messages" id="mls-chat-messages">
       <div class="mls-chat-msg bot">${WELCOME_MESSAGE}</div>
     </div>
