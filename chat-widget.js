@@ -1,17 +1,22 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import * as supabaseConfig from "./supabase-config.js";
 
 const FUNCTION_NAME = "MLS-AI";
-let cachedClient = null;
+const WELCOME_MESSAGE =
+  "Olá! Posso tirar dúvidas sobre a Roda de Vôlei, mostrar o resumo de presença de hoje ou conversar sobre vôlei em geral.";
 
-function getSupabaseClient() {
+function getSupabaseContext() {
   const cfg =
     supabaseConfig.default ||
     supabaseConfig.RODA_SUPABASE_CONFIG ||
     window.RODA_SUPABASE_CONFIG ||
     supabaseConfig;
 
-  const url = cfg.url || cfg.supabaseUrl || cfg.SUPABASE_URL || "";
+  const url = (
+    cfg.url ||
+    cfg.supabaseUrl ||
+    cfg.SUPABASE_URL ||
+    ""
+  ).replace(/\/$/, "");
   const key =
     cfg.publishableKey ||
     cfg.anonKey ||
@@ -19,17 +24,53 @@ function getSupabaseClient() {
     cfg.SUPABASE_ANON_KEY ||
     "";
 
-  if (cfg.supabase && url && key) {
-    return { supabase: cfg.supabase, url, key };
-  }
-
   if (!url || !key) return null;
 
-  if (!cachedClient) {
-    cachedClient = createClient(url, key);
+  return {
+    supabase: window.__rodaSupabaseClient || cfg.supabase || null,
+    url,
+    key,
+  };
+}
+
+function getStoredSession(supabaseUrl) {
+  try {
+    const projectRef = new URL(supabaseUrl).hostname.split(".")[0];
+    if (!projectRef) return null;
+    const raw = localStorage.getItem(`sb-${projectRef}-auth-token`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const session = parsed?.currentSession || parsed;
+    if (!session?.access_token) return null;
+    return {
+      accessToken: session.access_token,
+      userId: session.user?.id || null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function resolveSession(supabase, supabaseUrl) {
+  const stored = getStoredSession(supabaseUrl);
+  if (stored?.accessToken) return stored;
+
+  if (supabase?.auth?.getSession) {
+    try {
+      const { data } = await supabase.auth.getSession();
+      const s = data?.session;
+      if (s?.access_token) {
+        return {
+          accessToken: s.access_token,
+          userId: s.user?.id || null,
+        };
+      }
+    } catch {
+      return null;
+    }
   }
 
-  return { supabase: cachedClient, url, key };
+  return null;
 }
 
 function initChatWidget() {
@@ -51,10 +92,13 @@ function initChatWidget() {
   panel.innerHTML = `
     <div class="mls-chat-header">
       <strong>Assistente • Roda de Vôlei</strong>
-      <button type="button" class="mls-chat-close" aria-label="Fechar chat">&times;</button>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button type="button" class="mls-chat-clear" title="Limpar histórico" style="background:transparent;border:1px solid currentColor;border-radius:6px;padding:2px 8px;font-size:12px;color:inherit;cursor:pointer;" hidden>Limpar</button>
+        <button type="button" class="mls-chat-close" aria-label="Fechar chat">&times;</button>
+      </div>
     </div>
     <div class="mls-chat-messages" id="mls-chat-messages">
-      <div class="mls-chat-msg bot">Olá! Posso tirar dúvidas sobre a Roda de Vôlei e mostrar o resumo de presença de hoje.</div>
+      <div class="mls-chat-msg bot">${WELCOME_MESSAGE}</div>
     </div>
     <div class="mls-chat-quick">
       <button type="button" data-q="Quantos confirmados hoje?">Confirmados hoje</button>
@@ -62,7 +106,7 @@ function initChatWidget() {
       <button type="button" data-q="Como funciona a roda?">Como funciona</button>
     </div>
     <form class="mls-chat-form" id="mls-chat-form">
-      <input type="text" id="mls-chat-input" placeholder="Pergunte sobre a roda..." autocomplete="off" required />
+      <input type="text" id="mls-chat-input" placeholder="Pergunte sobre a roda ou vôlei..." autocomplete="off" required />
       <button type="submit" id="mls-chat-send">Enviar</button>
     </form>
   `;
@@ -70,17 +114,13 @@ function initChatWidget() {
   document.body.append(launcher, panel);
 
   const closeBtn = panel.querySelector(".mls-chat-close");
+  const clearBtn = panel.querySelector(".mls-chat-clear");
   const messagesEl = panel.querySelector("#mls-chat-messages");
   const formEl = panel.querySelector("#mls-chat-form");
   const inputEl = panel.querySelector("#mls-chat-input");
   const sendBtn = panel.querySelector("#mls-chat-send");
 
-  function togglePanel(forceOpen) {
-    const isOpen = typeof forceOpen === "boolean" ? forceOpen : panel.hidden;
-    panel.hidden = !isOpen;
-    launcher.setAttribute("aria-expanded", String(isOpen));
-    if (isOpen) inputEl.focus();
-  }
+  let historyLoadedForUser = null;
 
   function appendMessage(text, role) {
     const bubble = document.createElement("div");
@@ -89,6 +129,96 @@ function initChatWidget() {
     messagesEl.appendChild(bubble);
     messagesEl.scrollTop = messagesEl.scrollHeight;
     return bubble;
+  }
+
+  function resetMessagesView(customWelcome = WELCOME_MESSAGE) {
+    messagesEl.innerHTML = "";
+    appendMessage(customWelcome, "bot");
+  }
+
+  async function loadPersistentHistory() {
+    const ctx = getSupabaseContext();
+    if (!ctx) return;
+
+    const session = await resolveSession(ctx.supabase, ctx.url);
+    if (!session?.accessToken) {
+      clearBtn.hidden = true;
+      historyLoadedForUser = null;
+      return;
+    }
+
+    clearBtn.hidden = false;
+
+    const cacheKey = session.userId || session.accessToken.slice(0, 16);
+    if (historyLoadedForUser === cacheKey) return;
+
+    try {
+      const response = await fetch(
+        `${ctx.url}/rest/v1/chat_messages?select=role,content&order=created_at.desc&limit=20`,
+        {
+          headers: {
+            apikey: ctx.key,
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          signal: AbortSignal.timeout(6000),
+        },
+      );
+
+      if (!response.ok) return;
+
+      const rows = await response.json();
+      historyLoadedForUser = cacheKey;
+
+      if (Array.isArray(rows) && rows.length > 0) {
+        messagesEl.innerHTML = "";
+        for (const item of [...rows].reverse()) {
+          const role = item.role === "user" ? "user" : "bot";
+          appendMessage(item.content, role);
+        }
+      }
+    } catch {
+      // Falha silenciosa: mantém a mensagem de boas-vindas
+    }
+  }
+
+  async function clearPersistentHistory() {
+    const ctx = getSupabaseContext();
+    if (!ctx) return;
+
+    const session = await resolveSession(ctx.supabase, ctx.url);
+    if (!session?.accessToken) return;
+
+    clearBtn.disabled = true;
+    try {
+      const filter = session.userId
+        ? `user_id=eq.${encodeURIComponent(session.userId)}`
+        : "id=not.is.null";
+
+      const response = await fetch(`${ctx.url}/rest/v1/chat_messages?${filter}`, {
+        method: "DELETE",
+        headers: {
+          apikey: ctx.key,
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+        signal: AbortSignal.timeout(6000),
+      });
+
+      if (response.ok) {
+        resetMessagesView("Histórico limpo! Como posso ajudar agora?");
+      }
+    } finally {
+      clearBtn.disabled = false;
+    }
+  }
+
+  function togglePanel(forceOpen) {
+    const isOpen = typeof forceOpen === "boolean" ? forceOpen : panel.hidden;
+    panel.hidden = !isOpen;
+    launcher.setAttribute("aria-expanded", String(isOpen));
+    if (isOpen) {
+      void loadPersistentHistory();
+      inputEl.focus();
+    }
   }
 
   async function sendQuestion(text) {
@@ -102,28 +232,27 @@ function initChatWidget() {
     const loadingBubble = appendMessage("Consultando...", "bot");
 
     try {
-      const clientData = getSupabaseClient();
-      if (!clientData) {
+      const ctx = getSupabaseContext();
+      if (!ctx) {
         throw new Error("Configuração do Supabase indisponível.");
       }
 
-      const { supabase, url, key } = clientData;
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const session = await resolveSession(ctx.supabase, ctx.url);
 
       const headers = {
         "Content-Type": "application/json",
-        apikey: key,
+        apikey: ctx.key,
       };
 
-      if (session?.access_token) {
-        headers.Authorization = `Bearer ${session.access_token}`;
+      if (session?.accessToken) {
+        headers.Authorization = `Bearer ${session.accessToken}`;
+        clearBtn.hidden = false;
       }
 
-      const response = await fetch(`${url}/functions/v1/${FUNCTION_NAME}`, {
+      const response = await fetch(`${ctx.url}/functions/v1/${FUNCTION_NAME}`, {
         method: "POST",
         headers,
+        signal: AbortSignal.timeout(12000),
         body: JSON.stringify({ message: cleanText }),
       });
 
@@ -136,7 +265,9 @@ function initChatWidget() {
         data.reply || "Sem resposta no momento. Tente novamente.";
     } catch (err) {
       loadingBubble.textContent =
-        err?.message || "Erro ao falar com o assistente.";
+        err?.name === "TimeoutError"
+          ? "A consulta demorou mais que o esperado. Tente novamente."
+          : err?.message || "Erro ao falar com o assistente.";
     } finally {
       sendBtn.disabled = false;
     }
@@ -144,6 +275,9 @@ function initChatWidget() {
 
   launcher.addEventListener("click", () => togglePanel());
   closeBtn.addEventListener("click", () => togglePanel(false));
+  clearBtn.addEventListener("click", () => {
+    void clearPersistentHistory();
+  });
 
   panel.querySelectorAll("[data-q]").forEach((btn) => {
     btn.addEventListener("click", () => sendQuestion(btn.dataset.q || ""));
