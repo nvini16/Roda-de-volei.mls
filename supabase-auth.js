@@ -391,41 +391,6 @@ els.btnSignup?.addEventListener("click", async () => {
   }
 });
 
-els.btnSignup?.addEventListener("click", async () => {
-  setFeedback(els.authFeedback, "");
-
-  const email = els.authEmail?.value.trim() || "";
-  const password = els.authPassword?.value || "";
-  const validationError = validateCredentials(email, password);
-
-  if (validationError) {
-    setFeedback(els.authFeedback, validationError);
-    return;
-  }
-
-  setFeedback(els.authFeedback, "Criando conta...");
-  setButtonsDisabled(true);
-
-  try {
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) {
-      setFeedback(els.authFeedback, `Erro no cadastro: ${error.message}`);
-      return;
-    }
-
-    if (data.session) {
-      setFeedback(els.authFeedback, "Conta criada e sessão iniciada!");
-    } else {
-      setFeedback(
-        els.authFeedback,
-        "Conta criada! Confira seu e-mail para confirmar o cadastro, se necessário."
-      );
-    }
-  } finally {
-    setButtonsDisabled(false);
-  }
-});
-
 els.btnLogout?.addEventListener("click", async () => {
   setButtonsDisabled(true);
   try {
