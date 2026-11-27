@@ -198,12 +198,19 @@ function initChatWidget() {
     const session = await resolveSession(ctx.supabase, ctx.url);
     if (!session?.accessToken) return;
 
+    // Sem o ID do usuário, não é seguro construir um filtro de exclusão.
+    // Nunca use um filtro amplo como fallback para limpar o histórico.
+    if (!session.userId) {
+      appendMessage(
+        "Não foi possível identificar sua conta. Entre novamente para limpar seu histórico com segurança.",
+        "bot"
+      );
+      return;
+    }
+
     clearBtn.disabled = true;
     try {
-      const filter = session.userId
-        ? `user_id=eq.${encodeURIComponent(session.userId)}`
-        : "id=not.is.null";
-
+      const filter = `user_id=eq.${encodeURIComponent(session.userId)}`;
       const response = await fetch(`${ctx.url}/rest/v1/chat_messages?${filter}`, {
         method: "DELETE",
         headers: {
@@ -213,9 +220,18 @@ function initChatWidget() {
         signal: AbortSignal.timeout(6000),
       });
 
-      if (response.ok) {
-        resetMessagesView("Histórico limpo! Como posso ajudar agora?");
+      if (!response.ok) {
+        throw new Error("Não foi possível limpar o histórico. Tente novamente.");
       }
+
+      resetMessagesView("Histórico limpo! Como posso ajudar agora?");
+    } catch (err) {
+      appendMessage(
+        err?.name === "TimeoutError"
+          ? "A limpeza demorou mais que o esperado. Tente novamente."
+          : err?.message || "Erro ao limpar o histórico.",
+        "bot"
+      );
     } finally {
       clearBtn.disabled = false;
     }
